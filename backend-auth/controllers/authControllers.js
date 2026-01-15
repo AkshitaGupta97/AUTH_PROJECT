@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import userModel from '../models/userModel.js';
 import jwt from "jsonwebtoken";
+import transporter from '../config/nodemailer.js';
 
 export const register = async(req, res) => {
     const {name, email, password} = req.body;
@@ -31,6 +32,16 @@ export const register = async(req, res) => {
         });
 
         // sending mail from nodemailer => brevo
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to:  user.email,
+            subject: 'Welcome to Akshita hub',
+            text: `Welcome to Akshita hub website. Your account has been created with email id: ${email}`,
+            html: `Welcome, your account has been created successfully.`
+        }
+        await transporter.verify();
+        
+        await transporter.sendMail(mailOptions);
 
         return res.json({success: true});
 
@@ -83,3 +94,75 @@ export const logout = async (req, res) => {
         return res.json({success: false, message: error.message});
     }
 }
+
+// email verification function
+
+export const sendVerifyOtp = async (req, res) => {
+    try{
+        const userId = req.user.id;
+        const user =  await userModel.findById(userId);
+        if(user.isAccountVerified){
+            return res.json({success: false, message: "Account Already Verified !!"});
+        }
+        // for otp generation use -> 
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+        user.verifyOtp = otp;
+        user.verifyOtpExpireAt = Date.now() + 3 * 60 * 1000;  // 1 sec = 1000 millisecond, 
+
+        await user.save();
+
+        const mailOption = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: 'Account verification OTP  ',
+            text: `Yourt OTP ${otp}. Verify your account using this OTP`,
+            html: `Welcome.`
+        }
+
+        res.json({success: true, message: "Verify, OTP sent on Email"});
+
+    }
+    catch(error){
+        res.json({success: false, message: error.message})
+    }
+}
+/*
+Math.random() -> range[0 < 1] 0.0003, 0.34, 0.4
+Math.random() * 900000 -> range[0-89999]
+100000 + Math.random() -> 999999
+*/
+
+export const verifyEmail = async (req, res) => {
+    //const {userId, otp} = req.body;
+    const userId = req.user.id;
+    const {otp} =  req.body;
+
+    if(!userId || !otp){
+        return res.json({success: false, message: "Missing Details"});
+    }
+    try {
+        const user = await userModel.findById(userId);
+        if(!user){
+            return res.json({success: false, message: "User not found"});
+        }
+        if(user.verifyOpt === '' || user.verifyOpt != otp){
+            return res.json({success: false, message: "Invalid OTP"});
+        }
+        if(user.verifyOtpExpireAt < Date.now()){
+            return res.json({success: false, message: "OTP Expired"});
+        }
+        user.isAccountVerified = true;
+        // reset them
+        user.verifyOpt = '';
+        user.verifyOtpExpireAt = 0;
+
+        await user.save();
+
+        return res.json({success: true, message: 'Email verified Successfully...'});
+
+    } catch (error) {
+        return res.json({success: false, message: error.message});
+    }
+}
+
