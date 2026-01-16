@@ -9,3 +9,10 @@ body{
   background-color: #302f2f;
   color: aliceblue;
 }
+/*.material-symbols-outlined {
+  color: #111;       /* dark color 
+}*/
+.logo-size-css {
+  font-size: 48px;   /* makes it big */
+  color: #111;       /* dark color */
+}
