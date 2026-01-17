@@ -29,7 +29,7 @@ const Login = () => {
           navigate('/')
         }
         else {
-          toast.error(error);
+          toast.error(error.message);
         }
 
       }
