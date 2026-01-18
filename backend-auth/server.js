@@ -9,7 +9,6 @@ import userRouter from "./routes/userRoutes.js";
 const app = express();
 const port = process.env.PORT || 4000
 
-
 const serverStart = async() => {
     await connectDb();
 
