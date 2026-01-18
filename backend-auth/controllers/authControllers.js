@@ -116,7 +116,7 @@ export const sendVerifyOtp = async (req, res) => {
             from: process.env.SENDER_EMAIL,
             to: user.email,
             subject: 'Account verification OTP  ',
-            text: `Yourt OTP ${otp}. Verify your account using this OTP`,
+            text: `Your OTP ${otp}. Verify your account using this OTP`,
             html: `Welcome.`
         }
         await transporter.sendMail(mailOption);

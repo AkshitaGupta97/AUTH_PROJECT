@@ -23,12 +23,12 @@ const EmailVerify = () => {
 
   const handleKeyDown = (e, index) => {
     if(e.key === 'Backspace' && e.target.value === '' && index > 0){
-      inputRefs.current[index+1].focus();
+      inputRefs.current[index-1].focus(); // move to previous input
     }
   }
 
   const handlePaste = (e) => {
-    const paste = e.clipboardData.getData('text');
+    const paste = e.clipboardData.getData('text');  // clipboard gives the data you copied or paste
     const pasteArray = paste.split('');
     pasteArray.forEach((char, index) => {
       if(inputRefs.current[index]){
@@ -42,7 +42,7 @@ const EmailVerify = () => {
       e.preventDefault();
       const otpArray = inputRefs.current.map(e => e.value);
       const otp = otpArray.join('');
-
+      // - Collects all input values into an array, then joins them into a single OTP string.
       const {data} = await axios.post(backendUrl + '/api/auth/verify-account', {otp});
 
       if(data.success){
@@ -100,3 +100,32 @@ const EmailVerify = () => {
 }
 
 export default EmailVerify
+
+/*
+- useRef(initialValue) creates a mutable object that React will keep the same between renders. - { current: initialValue }
+
+const inputRefs = useRef([]);
+- inputRefs.current - starts as an empty array.
+
+ref={e => inputRefs.current[index] = e}
+- Each input element is stored in the array at its position.
+- Example after rendering 6 inputs:
+inputRefs.current = [
+  HTMLInputElement, // index 0
+  HTMLInputElement, // index 1
+  ...
+  HTMLInputElement  // index 5
+]
+  *****
+  1. const paste = e.clipboardData.getData('text');
+- e is the paste event triggered when the user pastes something.
+- e.clipboardData.getData('text') retrieves the plain text from the clipboard.
+- Example: If the user copies 123456 and pastes it, paste will be "123456".
+-split('') : - "123456".split('') → ["1", "2", "3", "4", "5", "6"].
+3. pasteArray.forEach((char, index) => { ... }): - char is the digit (like "1", "2", etc.). - index is the position (0–5 for a 6-digit OTP).
+5. inputRefs.current[index].value = char;
+- - inputRefs.current[0].value = "1"
+- inputRefs.current[1].value = "2"
+
+
+*/
